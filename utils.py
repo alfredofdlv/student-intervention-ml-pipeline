@@ -1,9 +1,10 @@
 
-from typing import List
+from typing import List, Dict
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from typing import Dict 
+from sklearn.ensemble import RandomForestClassifier
+
 
 def detect_outliers_iqr(df: pd.DataFrame, factor: float = 1.5) -> List[int]:
     numeric_cols = df.select_dtypes("number").columns
@@ -77,7 +78,29 @@ def build_features(df_part: pd.DataFrame, stats: Dict[str, float]) -> pd.DataFra
     # Eliminar helpers *_fill para no duplicar columnas
     
     out['study_efficiency_log']=out['study_efficiency_log'].fillna(0)
-    print(out['study_efficiency_log'])
-    out.drop(columns=["studytime_fill", "absences_fill", "traveltime_fill"], inplace=True)
+    # print(out['study_efficiency_log'])
+    out.drop(columns=["studytime_fill", "absences_fill", "traveltime_fill",'study_efficiency_log'], inplace=True)
 
     return out
+
+def compute_feature_importance(
+    X: pd.DataFrame,
+    y: pd.Series,
+    *,
+    model: RandomForestClassifier | None = None,
+    random_state: int = 42,
+    n_estimators: int = 400,
+) -> tuple[pd.DataFrame, RandomForestClassifier]:
+    """Train *model* (defaults to RandomForest) and return a DataFrame of feature importances sorted descending."""
+    if model is None:
+        model = RandomForestClassifier(
+            n_estimators=n_estimators,
+            random_state=random_state,
+            n_jobs=-1,
+            class_weight="balanced",
+        )
+    model.fit(X, y)
+    imp = pd.DataFrame({"feature": X.columns, "importance": model.feature_importances_})
+    imp.sort_values("importance", ascending=False, inplace=True)
+    imp.reset_index(drop=True, inplace=True)
+    return imp, model
