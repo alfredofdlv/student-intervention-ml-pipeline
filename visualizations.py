@@ -91,7 +91,7 @@ def feature_importance_heatmap(
     plt.figure(figsize=figsize)
     # Convert to matrix: one row, features as columns
     data = importance_df.set_index("feature").T
-    sns.heatmap(data, cmap="viridis", cbar_kws={"label": "Importance"})
+    sns.heatmap(data, cmap="magma", cbar_kws={"label": "Importance"})
     plt.yticks(rotation=0)
     plt.xticks(rotation=90)
     plt.title("Feature Importances – Global Heatmap")

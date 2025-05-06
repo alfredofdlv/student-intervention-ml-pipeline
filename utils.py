@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.decomposition import PCA
 
 
 def detect_outliers_iqr(df: pd.DataFrame, factor: float = 1.5) -> List[int]:
@@ -104,3 +105,46 @@ def compute_feature_importance(
     imp.sort_values("importance", ascending=False, inplace=True)
     imp.reset_index(drop=True, inplace=True)
     return imp, model
+
+def preprocess_and_pca(X_train, X_test, show_plot=True):
+    """
+    Realiza PCA en el conjunto de datos.
+
+    Args:
+        X_train (DataFrame): Datos de entrenamiento.
+        X_test (DataFrame): Datos de prueba.
+        show_plot (bool): Si True, muestra un gráfico de varianza explicada acumulada.
+
+    Returns:
+        tuple: X_train_pca, X_test_pca, pca
+    """
+    pca = PCA(n_components=0.975)
+    pca.fit(X_train)
+
+    # Autovalores y criterios de Kaiser
+    autovalores = pca.explained_variance_
+    media_autovalores = np.mean(autovalores)
+
+    criterio_kaiser_cov = autovalores > media_autovalores
+    criterio_kaiser_cor = autovalores > 1
+
+    # Varianza explicada y acumulada
+    varianza_explicada = pca.explained_variance_ratio_
+    varianza_acumulada = np.cumsum(varianza_explicada)
+
+    # Impresiones
+    print(f"Components (Kaiser criterion - covariance > mean): {np.sum(criterio_kaiser_cov)}")
+    print(f"  Cumulative variance: {varianza_acumulada[np.sum(criterio_kaiser_cov) - 1]:.4f}")
+
+    print(f"Components (Kaiser criterion - correlation > 1): {np.sum(criterio_kaiser_cor)}")
+    print(f"  Cumulative variance: {varianza_acumulada[np.sum(criterio_kaiser_cor) - 1]:.4f}")
+
+    # Print number of components selected to reach 97.5% variance
+    n_components_975 = pca.n_components_
+    print(f"Number of components to reach 97.5% variance: {n_components_975}")
+
+    X_train_pca = pca.transform(X_train)
+    X_test_pca = pca.transform(X_test)
+    return X_train_pca, X_test_pca, pca
+
+ 
