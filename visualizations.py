@@ -133,27 +133,47 @@ def plot_pca_variance(
         plt.savefig("pca_variance.png", dpi=300)
     plt.show()
 
-def class_distribution(df, waffle=False):
+def class_distribution(df):
 
-    if waffle:
-        # recuentos
-        counts = df["passed"].value_counts().to_dict()
+    counts = df["passed"].value_counts().to_dict()
+    palette = sns.color_palette("Set2", n_colors=len(counts))
 
-        fig = plt.figure(
-            FigureClass=Waffle,
-            rows=10,                         # 10×10 = 100 celdas → fácil leer %
-            values=counts,
-            colors=sns.color_palette("Set2"),
-            icons="user-graduate",           # FontAwesome; opcional
-            icon_size=14,
-            legend={'loc': 'lower left', 'bbox_to_anchor': (0, -0.4),
-                    'ncol': 2, 'frameon': False},
-            interval_ratio_x=0.8,
-            figsize=(5, 5)
-        )
+    fig = plt.figure(
+        FigureClass=Waffle,
+        rows=10,                       
+        figsize=(10, 4),
+        tight=True,                    
+        plots={
+            121: {
+                'values' : counts,
+                'colors' : palette,
+                'legend' : {
+                    'loc'            : 'lower left',
+                    'bbox_to_anchor' : (0, -0.35),
+                    'ncol'           : 2,
+                    'frameon'        : False,
+                },
+            }
+        }
+    )
 
-        plt.title("Proporción de aprobados vs. suspensos", weight="bold", pad=15)
-        plt.tight_layout()
-        plt.show()
-    else: 
-        pass
+    # 2) barplot 
+    ax2 = fig.add_subplot(1, 2, 2)    
+    sns.barplot(
+        x=list(counts.keys()),
+        y=list(counts.values()),
+        palette=palette,
+        width=0.6,
+        ax=ax2
+    )
+    ax2.bar_label(ax2.containers[0], fontsize=10, padding=3)
+    ax2.set_xlabel("")
+    ax2.set_ylabel("Number of students")
+    ax2.set_title("Distribution of the class passed", weight="bold", pad=8)
+    sns.despine(ax=ax2)
+
+    # títulos
+    fig.axes[0].set_title("Proportion of passed vs failed",
+                        weight="bold", pad=8)
+
+    plt.show()
