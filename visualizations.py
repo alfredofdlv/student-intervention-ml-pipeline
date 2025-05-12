@@ -2,6 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt  
 import seaborn as sns   
 import numpy as np 
+import pywaffle, fontawesomefree
+from pywaffle import Waffle
 
 
 
@@ -130,3 +132,28 @@ def plot_pca_variance(
     if save:
         plt.savefig("pca_variance.png", dpi=300)
     plt.show()
+
+def class_distribution(df, waffle=False):
+
+    if waffle:
+        # recuentos
+        counts = df["passed"].value_counts().to_dict()
+
+        fig = plt.figure(
+            FigureClass=Waffle,
+            rows=10,                         # 10×10 = 100 celdas → fácil leer %
+            values=counts,
+            colors=sns.color_palette("Set2"),
+            icons="user-graduate",           # FontAwesome; opcional
+            icon_size=14,
+            legend={'loc': 'lower left', 'bbox_to_anchor': (0, -0.4),
+                    'ncol': 2, 'frameon': False},
+            interval_ratio_x=0.8,
+            figsize=(5, 5)
+        )
+
+        plt.title("Proporción de aprobados vs. suspensos", weight="bold", pad=15)
+        plt.tight_layout()
+        plt.show()
+    else: 
+        pass
