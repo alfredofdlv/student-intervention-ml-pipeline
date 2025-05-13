@@ -4,7 +4,8 @@ import seaborn as sns
 import numpy as np 
 import pywaffle, fontawesomefree
 from pywaffle import Waffle
-
+import math
+from matplotlib.ticker import MaxNLocator
 
 
 def na_visualization(df,save=False): 
@@ -31,6 +32,7 @@ def na_visualization(df,save=False):
 def correlation_heatmap(df, save=False):
     numeric_cols = df.select_dtypes("number").columns
     corr = df[numeric_cols].corr(method="pearson")
+    corr.to_csv('corr.csv')
     
     # Imprime la tabla de correlación en consola
     print("\nTabla de correlaciones:")
@@ -177,3 +179,49 @@ def class_distribution(df):
                         weight="bold", pad=8)
 
     plt.show()
+
+def numerical_features_visualization(df):
+    num_cols = df.select_dtypes(include='number').columns.tolist()
+
+    n_cols = 3
+    n_rows = math.ceil(len(num_cols) / n_cols)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5*n_cols, 4*n_rows))
+
+    for ax, col in zip(axes.flatten(), num_cols):
+        data = df[col].dropna()
+        # definimos bins:
+        if data.nunique() < 20:
+            # un bin por valor entero
+            bins = np.arange(data.min(), data.max()+2) - 0.5
+            ax.hist(data, bins=bins, rwidth=0.9, edgecolor='white')
+            # tick en cada valor
+            ax.set_xticks(np.arange(data.min(), data.max()+1))
+        else:
+            # menos bins para que no se apelotonen
+            bins = 15
+            ax.hist(data, bins=bins, rwidth=0.9, edgecolor='white')
+            # máximo 5 ticks para no saturar
+            ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+        ax.set_title(col)
+        ax.set_ylabel('Fequency')
+        ax.set_xlabel('')
+        # si quieres girar poco las etiquetas:
+        ax.tick_params(axis='x', rotation=0)
+
+    # ocultar subplots vacíos
+    for ax in axes.flatten()[len(num_cols):]:
+        ax.set_visible(False)
+
+    plt.tight_layout()
+    plt.show()
+
+    # 1.3 Distribuciones y comparación según la clase ‘passed’
+    vars_plot =num_cols  # ejemplo
+    sns.pairplot(
+        df,
+        vars=vars_plot,
+        hue='passed',
+        diag_kind='kde',
+        palette='Set2',
+        corner=True
+    )

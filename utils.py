@@ -20,69 +20,47 @@ def detect_outliers_iqr(df: pd.DataFrame, factor: float = 1.5) -> List[int]:
     print(f"Detected {len(outlier_idx)} potential outliers across numeric features.")
     return outlier_idx
 
-def build_features(df_part: pd.DataFrame, stats: Dict[str, float]) -> pd.DataFrame:
-    """Añade 16 nuevas columnas al DataFrame usando `stats` pre‑calculadas."""
-    out = df_part.copy()
-
-    # --- Imputaciones internas para evitar NaNs en features derivados ---
-    out["studytime_fill"] = out["studytime"].fillna(stats["median_studytime"])
-    out["absences_fill"] = out["absences"].fillna(0)
-    out["traveltime_fill"] = out["traveltime"].fillna(stats["median_traveltime"])
-
-
-    # 1) study_efficiency_log
-    out["study_efficiency_log"] = np.log(out["studytime_fill"] + 1) - np.log(out["absences_fill"] + 1)
-
-    # 2) absence_ratio
-    out["absence_ratio"] = out["absences"] / (out["traveltime"] + 1)
-
-    # 3) absence_flag_q75
-    out["absence_flag_q75"] = (out["absences"] > stats["q75_absences"]).astype(int)
-
-    # 4) alcohol_index_z
-    z_dalc = (out["Dalc"] - stats["mean_dalc"]) / stats["std_dalc"]
-    z_walc = (out["Walc"] - stats["mean_walc"]) / stats["std_walc"]
-    out["alcohol_index_z"] = 0.4 * z_dalc + 0.6 * z_walc
-
-    # 5) alcohol_spike_weekend
-    out["alcohol_spike_weekend"] = out["Walc"] - out["Dalc"]
-
-    # 6) weekend_focus
-    out["weekend_focus"] = ((out["Dalc"] <= 2) & (out["Walc"] <= 2)).astype(int)
-
-    # 7) family_support_total
-    out["family_support_total"] = out["schoolsup_yes"] + out["famsup_yes"] + out["paid_yes"]
-
-    # 8) support_change
-    out["support_change"] = out["schoolsup_yes"] - out["famsup_yes"]
-
-    # 9) parent_edu_avg
-    out["parent_edu_avg"] = (out["Medu"] + out["Fedu"]) / 2
-
-    # 10) highly_educated_parent
-    out["highly_educated_parent"] = (np.maximum(out["Medu"], out["Fedu"]) >= 3).astype(int)
-
-    # 11‑12) commute spline
-    out["commute_spline_low"] = np.maximum(0, 2 - out["traveltime"])
-    out["commute_spline_high"] = np.maximum(0, out["traveltime"] - 2)
-
-    # 13) failure_history_std
-    out["failure_history_std"] = (out["failures"] - stats["mean_failures"]) / stats["std_failures"]
-
-    # 14) failure_history_sq
-    out["failure_history_sq"] = out["failure_history_std"] ** 2
-
-    # 15‑16) fairness interactions
-    out["fairness_sex_schoolsup"] = out["sex_F"] * out["schoolsup_yes"]
-    out["fairness_sex_famsup"] = out["sex_F"] * out["famsup_yes"]
-
-    # Eliminar helpers *_fill para no duplicar columnas
+def build_features(df_part: pd.DataFrame) -> pd.DataFrame:
+    """Feature engineering after doing the preprocessing ."""
+    df = df_part.copy()
+    # 1. Leisure–study balance
+    df['leisure_balance'] = df['freetime'] - df['studytime']
     
-    out['study_efficiency_log']=out['study_efficiency_log'].fillna(0)
-    # print(out['study_efficiency_log'])
-    out.drop(columns=["studytime_fill", "absences_fill", "traveltime_fill",'study_efficiency_log'], inplace=True)
+    # 2. Aggregate social activities
+    df['sociality_index'] = (
+        df['goout'] +
+        df['romantic'] +
+        df['activities'] +
+        df['nursery']
+    )
+    
+    # 3. Alcohol consumption index
+    df['alcohol_index'] = 0.4 * df['Dalc'] + 0.6 * df['Walc']
+    
+    # 4. Health risk score
+    df['health_risk_score'] = (6 - df['health']) * df['alcohol_index']
+    
+    # 5. Digital access
+    df['tech_access'] = df['internet'] + df['address']
+    
+    # 6. Total formal support
+    df['support_sum'] = (
+        df['schoolsup'] +
+        df['famsup'] +
+        df['paid']
+    )
+    
+    # 7. Support mismatch
+    df['support_mismatch'] = df['schoolsup'] - df['famsup']
+    
+    # 8. Absence ratio adjusted by commute time
+    df['absence_ratio'] = df['absences'] / (df['traveltime'] + 1)
+    
+    # 9. Long commuter flag
+    df['long_commuter_flag'] = (df['traveltime'] >= 3).astype(int)
+    return df 
 
-    return out
+    
 
 def compute_feature_importance(
     X: pd.DataFrame,
