@@ -183,7 +183,7 @@ def class_distribution(df):
 def numerical_features_visualization(df):
     num_cols = df.select_dtypes(include='number').columns.tolist()
 
-    n_cols = 3
+    n_cols = 4
     n_rows = math.ceil(len(num_cols) / n_cols)
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(5*n_cols, 4*n_rows))
 
