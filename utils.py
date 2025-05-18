@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.decomposition import PCA
+import scipy.stats as ss
 
 
 def detect_outliers_iqr(df: pd.DataFrame, factor: float = 1.5) -> List[int]:
@@ -20,9 +21,13 @@ def detect_outliers_iqr(df: pd.DataFrame, factor: float = 1.5) -> List[int]:
     print(f"Detected {len(outlier_idx)} potential outliers across numeric features.")
     return outlier_idx
 
-def build_features(df_part: pd.DataFrame) -> pd.DataFrame:
+def build_features(X,columns=['school', 'sex', 'age', 'address', 'famsize', 'Pstatus', 'Medu', 'Fedu', 'Mjob', 'Fjob', 'reason', 'guardian', 'traveltime', 'studytime', 'failures', 'schoolsup', 'famsup', 'paid', 'activities', 'nursery', 'higher', 'internet', 'romantic', 'famrel', 'freetime', 'goout', 'Dalc', 'Walc', 'health', 'absences'] )-> pd.DataFrame:
+
     """Feature engineering after doing the preprocessing ."""
-    df = df_part.copy()
+    if not isinstance(X, pd.DataFrame):
+        df = pd.DataFrame(X, columns=columns)
+    else:
+        df = X.copy()
     # 1. Leisure–study balance
     df['leisure_balance'] = df['freetime'] - df['studytime']
     
@@ -124,5 +129,9 @@ def preprocess_and_pca(X_train, X_test, show_plot=True):
     X_train_pca = pca.transform(X_train)
     X_test_pca = pca.transform(X_test)
     return X_train_pca, X_test_pca, pca
-
+def cramers_v(x, y):
+        cm = pd.crosstab(x, y)
+        chi2 = ss.chi2_contingency(cm)[0]
+        n = cm.values.sum()
+        return np.sqrt(chi2 / (n * (min(cm.shape) - 1)))
  

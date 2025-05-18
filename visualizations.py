@@ -6,7 +6,10 @@ import pywaffle, fontawesomefree
 from pywaffle import Waffle
 import math
 from matplotlib.ticker import MaxNLocator
-
+import seaborn as sns
+import scipy.stats as ss
+import math
+from utils import cramers_v
 
 def na_visualization(df,save=False): 
     plt.figure(figsize=(12, 5))
@@ -35,8 +38,8 @@ def correlation_heatmap(df, save=False):
     corr.to_csv('corr.csv')
     
     # Imprime la tabla de correlación en consola
-    print("\nTabla de correlaciones:")
-    print(corr.round(2))  # Redondea a 2 decimales para que sea más legible
+    # print("\nTabla de correlaciones:")
+    # print(corr.round(2))  # Redondea a 2 decimales para que sea más legible
     
     # Dibuja el heatmap
     plt.figure(figsize=(14, 12))
@@ -180,8 +183,7 @@ def class_distribution(df):
 
     plt.show()
 
-def numerical_features_visualization(df):
-    num_cols = df.select_dtypes(include='number').columns.tolist()
+def numerical_features_visualization(df,num_cols,pairplot=False):
 
     n_cols = 4
     n_rows = math.ceil(len(num_cols) / n_cols)
@@ -189,23 +191,17 @@ def numerical_features_visualization(df):
 
     for ax, col in zip(axes.flatten(), num_cols):
         data = df[col].dropna()
-        # definimos bins:
         if data.nunique() < 20:
-            # un bin por valor entero
             bins = np.arange(data.min(), data.max()+2) - 0.5
             ax.hist(data, bins=bins, rwidth=0.9, edgecolor='white')
-            # tick en cada valor
             ax.set_xticks(np.arange(data.min(), data.max()+1))
         else:
-            # menos bins para que no se apelotonen
             bins = 15
             ax.hist(data, bins=bins, rwidth=0.9, edgecolor='white')
-            # máximo 5 ticks para no saturar
             ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
         ax.set_title(col)
         ax.set_ylabel('Fequency')
         ax.set_xlabel('')
-        # si quieres girar poco las etiquetas:
         ax.tick_params(axis='x', rotation=0)
 
     # ocultar subplots vacíos
@@ -214,14 +210,64 @@ def numerical_features_visualization(df):
 
     plt.tight_layout()
     plt.show()
+    if pairplot: 
+        vars_plot =num_cols  
+        sns.pairplot(
+            df,
+            vars=vars_plot,
+            hue='passed',
+            diag_kind='kde',
+            palette='Set2',
+            corner=True
+        )
 
-    # 1.3 Distribuciones y comparación según la clase ‘passed’
-    vars_plot =num_cols  # ejemplo
-    sns.pairplot(
-        df,
-        vars=vars_plot,
-        hue='passed',
-        diag_kind='kde',
-        palette='Set2',
-        corner=True
+
+def categorical_visualization(df):
+    cat_cols = [
+        col for col in df.select_dtypes(exclude='number').columns
+        if col != 'passed'
+    ]
+
+    cramers = {
+        col: cramers_v(df[col], df['passed'])
+        for col in cat_cols
+    }
+    cv_series = pd.Series(cramers).sort_values(ascending=False).round(2)
+
+    ax = cv_series.plot(kind='bar')
+    ax.set_title("Cramér’s V vs passed")
+    ax.set_ylabel("Cramér’s V")
+    ax.set_xlabel("")
+    # Rotar etiquetas del eje x
+    plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+    plt.tight_layout()
+    plt.show()
+
+
+    n_cols = 4
+    n_rows = math.ceil(len(cat_cols) / n_cols)
+    fig, axes = plt.subplots(
+        n_rows, n_cols,
+        figsize=(6 * n_cols, 4 * n_rows),
+        constrained_layout=True
     )
+
+    for ax, col in zip(axes.flatten(), cat_cols):
+        sns.countplot(
+            data=df,
+            x=col,
+            hue='passed',
+            palette='Paired',
+            ax=ax
+        )
+        ax.set_title(f"Count of passed by {col}")
+        ax.set_xlabel('')
+        ax.set_ylabel('Count')
+        ax.tick_params(axis='x', rotation=45)
+        ax.legend(title='passed', loc='upper right')
+
+    # Ocultar subplots vacíos (no habrá uno para 'passed')
+    for ax in axes.flatten()[len(cat_cols):]:
+        ax.set_visible(False)
+
+    plt.show()
