@@ -37,9 +37,6 @@ def correlation_heatmap(df, save=False):
     corr = df[numeric_cols].corr(method="pearson")
     corr.to_csv('corr.csv')
     
-    # Imprime la tabla de correlación en consola
-    # print("\nTabla de correlaciones:")
-    # print(corr.round(2))  # Redondea a 2 decimales para que sea más legible
     
     # Dibuja el heatmap
     plt.figure(figsize=(14, 12))
@@ -238,7 +235,6 @@ def categorical_visualization(df):
     ax.set_title("Cramér’s V vs passed")
     ax.set_ylabel("Cramér’s V")
     ax.set_xlabel("")
-    # Rotar etiquetas del eje x
     plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
     plt.tight_layout()
     plt.show()
@@ -266,8 +262,42 @@ def categorical_visualization(df):
         ax.tick_params(axis='x', rotation=45)
         ax.legend(title='passed', loc='upper right')
 
-    # Ocultar subplots vacíos (no habrá uno para 'passed')
     for ax in axes.flatten()[len(cat_cols):]:
         ax.set_visible(False)
 
+    plt.show()
+
+def smote_vs_baseline(smote_df,results_df_actual):
+    
+    metrics = ['F1 Score','Recall','Balanced Accuracy']
+    n = len(smote_df)
+
+
+    best_smote = smote_df['F1 Score'].idxmax()
+    scores_smote = smote_df.loc[best_smote, metrics].values
+
+    best_nosmote = results_df_actual.set_index('Model')['F1 Score'].idxmax()
+    nosmote_df = results_df_actual.set_index('Model')
+    scores_nosmote = nosmote_df.loc[best_nosmote, metrics].values
+
+    x = np.arange(len(metrics))
+    width = 0.35
+
+    fig, ax = plt.subplots(figsize=(7,4))
+    ax.bar(x - width/2, scores_smote,  width, label=f'{best_smote} (SMOTE)')
+    ax.bar(x + width/2, scores_nosmote, width, label=f'{best_nosmote} (base)')
+
+    # Anotaciones
+    for i, v in enumerate(scores_smote):
+        ax.text(i - width/2, v+0.02, f"{v:.2f}", ha='center')
+    for i, v in enumerate(scores_nosmote):
+        ax.text(i + width/2, v+0.02, f"{v:.2f}", ha='center')
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(metrics)
+    ax.set_ylim(0,1)
+    ax.set_ylabel('Score')
+    ax.set_title('Comparision best Model Smote vs Without SMOTE')
+    ax.legend()
+    plt.tight_layout()
     plt.show()
