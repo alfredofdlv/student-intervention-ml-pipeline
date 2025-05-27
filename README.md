@@ -4,11 +4,11 @@
 
 1. [Project Overview](#project-overview)
 2. [Repository Structure](#repository-structure)
-3. [Installation & Setup](#installation--setup)
+3. [Installation &amp; Setup](#installation--setup)
 4. [Usage](#usage)
 5. [Notebook Sections](#notebook-sections)
 6. [Interactive Application](#interactive-application)
-7. [Results & Visuals](#results--visuals)
+7. [Results &amp; Visuals](#results--visuals)
 8. [Images](#images)
 9. [License](#license)
 10. [Contact](#contact)
@@ -164,6 +164,6 @@ This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for d
 
 ## ✉️ Contact
 
-* **Author**: Alfredo Flórez de la Vega
-* **GitHub**: [alfredofdlv](https://github.com/alfredofdlv)
-* **Email**: [alfredofdlv@example.com](mailto:alfredofdlv@example.com)
+* **Author**: Alfredo Flórez de la Vega & Mateo Bouchet Agudo & Alejandro Móris Lara
+* **GitHub**: [alfredofdlv](https://github.com/alfredofdlv) [mateeoBAS](https://github.com/mateoBAS) [alejandromorislara](https://github.com/alejandromorislara)
+* **Email**: [alfredoflorezdelavega@gmail.com](mailto:alfredoflorezdelavega@gmail.com)
