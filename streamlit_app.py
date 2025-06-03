@@ -28,17 +28,17 @@ st.markdown(
 with st.expander("👤 Demographics & Family Background", expanded=True):
     cols = st.columns(3)
     with cols[0]:
-        school = st.radio("🏫 School", ["GP", "MS"])
-        sex    = st.radio("🚻 Sex", ["F", "M"])
-        age    = st.number_input("🎂 Age", min_value=10, max_value=25, value=17)
+        st.radio("🏫 School", ["GP", "MS"], key="school")
+        st.radio("🚻 Sex", ["F", "M"], key="sex")
+        st.number_input("🎂 Age", min_value=10, max_value=25, value=17, key="age")
     with cols[1]:
-        address = st.radio("🏠 Address", ["U", "R"])
-        famsize = st.radio("👪 Family Size", ["LE3", "GT3"])
-        Pstatus = st.radio("📝 Parent Status", ["T", "A"])
+        st.radio("🏠 Address", ["U", "R"], key="address")
+        st.radio("👪 Family Size", ["LE3", "GT3"], key="famsize")
+        st.radio("📝 Parent Status", ["T", "A"], key="Pstatus")
     with cols[2]:
-        guardian = st.selectbox("👨‍👩‍👧 Guardian", ["father", "mother", "other"])
-        reason   = st.selectbox("🎯 Reason for Enrollment", ["course", "home", "other", "reputation"])
-        absences = st.number_input("📅 Absences", min_value=0, max_value=100, value=0)
+        st.selectbox("👨‍👩‍👧 Guardian", ["father", "mother", "other"], key="guardian")
+        st.selectbox("🎯 Reason for Enrollment", ["course", "home", "other", "reputation"], key="reason")
+        st.number_input("📅 Absences", min_value=0, max_value=100, value=0, key="absences")
 
 with st.expander("📚 Education & Support", expanded=False):
     cols = st.columns(4)
